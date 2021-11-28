@@ -1,0 +1,746 @@
+================================================================================
+Quick Commands 
+================================================================================
+#Search a given text in  sub folders 
+ grep -lrnw '.' -e '0x53'
+
+
+================================================================================
+Tools needed 
+================================================================================
+
+https://www.st.com/en/development-tools/stm32cubeprog.html
+
+
+minicom -D /dev/ttyACM0
+#alias ssdk='source /home/saurabh/STM32MPU_workspace/STM32MP15-Ecosystem-v2.1.0/Developer-Package/SDK/environment-setup-cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi'
+#alias sdkv='echo $OECORE_SDK_VERSION'
+#alias cdk="cd /home/mpu/Developer-Package/stm32mp1-openstlinux-5.10-dunfell-mp1-21-03-31/sources/arm-ostl-linux-gnueabi/linux-stm32mp-5.10.10-r0/linux-5.10.10"
+#alia cdr="cd /home/mpu/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31"
+sudo apt-get install < package-name>
+
+================================================================================
+Important Links
+================================================================================
+https://wiki.st.com/stm32mpu/wiki/Main_Page 
+https://wiki.st.com/stm32mpu/wiki/Getting_started/STM32MP1_boards/STM32MP157x-DK2/Develop_on_Arm%C2%AE_Cortex%C2%AE-A7/Install_the_SDK
+https://wiki.st.com/stm32mpu/wiki/Getting_started/STM32MP1_boards/STM32MP157x-DK2/Develop_on_Arm%C2%AE_Cortex%C2%AE-A7/Create_a_simple_hello-world_application
+https://wiki.st.com/stm32mpu/wiki/Getting_started/STM32MP1_boards/STM32MP157x-DK2/Develop_on_Arm%C2%AE_Cortex%C2%AE-A7/Modify,_rebuild_and_reload_the_Linux%C2%AE_kernel
+
+
+
+#pre requisite 
+https://wiki.st.com/stm32mpu/wiki/PC_prerequisites
+
+================================================================================
+ Building kernel for the first time , after patching :
+================================================================================
+ 
+ssdk
+cd linux-5.10.10
+for p in `ls -1 ../*.patch`; do patch -p1 < $p; done
+#Apply fragments
+make ARCH=arm multi_v7_defconfig "fragment*.config"
+for f in `ls -1 ../fragment*.config`; do scripts/kconfig/merge_config.sh -m -r .config $f; done
+yes '' | make ARCH=arm oldconfig
+make ARCH=arm uImage vmlinux dtbs LOADADDR=0xC2000040
+make ARCH=arm modules
+
+mkdir -p $PWD/install_artifact/
+make ARCH=arm INSTALL_MOD_PATH="$PWD/install_artifact" modules_install
+
+
+scp arch/arm/boot/uImage root@192.168.72.1:/boot
+scp arch/arm/boot/dts/stm32mp157*.dtb root@192.168.72.1:/boot
+
+
+================================================================================
+ Building kernel for any modification in the kernel (source or device tree) : 
+ ================================================================================
+
+ 
+ssdk
+ 
+#source /home/saurabh/STM32MPU_workspace/STM32MP15-Ecosystem-v3.0.0/Developer-Package/SDK/environment-setup-cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi
+#I have already added its alias in the .bashrc, just to test it is working check the below commands : 
+ 
+echo $ARCH
+#arm
+
+echo $CROSS_COMPILE
+#arm-ostl-linux-gnueabi-
+
+$CC --version
+
+arm-ostl-linux-gnueabi-gcc (GCC) 9.3.0
+Copyright (C) 2019 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+================================================================================
+
+
+================================================================================
+Building Kernel and Flashing it
+================================================================================
+
+
+
+ssdk
+#make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+#we are not appending any CROSS-COMPILE flag as we hae already sourced the sdk
+make arch=ARM menuconfig
+make ARCH=arm uImage vmlinux dtbs LOADADDR=0xC2000040
+make ARCH=arm modules
+
+mkdir -p $PWD/install_artifact/
+make ARCH=arm INSTALL_MOD_PATH="$PWD/install_artifact" modules_install
+
+#if using Filezilla , copy the 1(arch/arm/boot/uImage)  2.arch/arm/boot/dts/stm32mp157*.dtb 3.install_artifact/lib/modules/* to a folder and then copy them to 
+# 1-----> /boot , 2-----> /lib/modules , 3---------> /lib/modules
+
+
+scp arch/arm/boot/uImage root@192.168.72.1:/boot
+scp arch/arm/boot/dts/stm32mp157*.dtb root@192.168.72.1:/boot
+
+For ecosystem release  v2.1.0 ￼ :
+rm install_artifact/lib/modules/5.4.56/build install_artifact/lib/modules/5.4.56/source 
+
+For ecosystem release  v3.0.0 ￼ :
+rm install_artifact/lib/modules/5.10.10/build install_artifact/lib/modules/5.10.10/source 
+
+find install_artifact/ -name "*.ko" | xargs $STRIP --strip-debug --remove-section=.comment --remove-section=.note --preserve-dates
+
+#find command 
+grep -rnw imu/ -e 'ism330dhcx'
+
+
+scp -r install_artifact/lib/modules/* root@192.168.72.1:/lib/modules
+
+
+
+
+#for differnt mac address
+scp arch/arm/boot/uImage root@192.168.0.103:/boot
+scp arch/arm/boot/dts/stm32mp157*.dtb root@192.168.0.103:/boot
+
+For ecosystem release  v2.1.0 ￼ :
+rm install_artifact/lib/modules/5.4.56/build install_artifact/lib/modules/5.4.56/source 
+
+For ecosystem release  v3.0.0 ￼ :
+rm install_artifact/lib/modules/5.10.10/build install_artifact/lib/modules/5.10.10/source 
+
+find install_artifact/ -name "*.ko" | xargs $STRIP --strip-debug --remove-section=.comment --remove-section=.note --preserve-dates
+S
+#find command 
+grep -rnw imu/ -e 'ism330dhcx'
+
+
+scp -r install_artifact/lib/modules/* root@192.168.0.103:/lib/modules
+
+
+#once copied , you can run the below commands
+Board $> /sbin/depmod -a
+Board $> sync
+Board $> reboot
+
+
+#for hot spot , you can do it from the STM32MP1 GUI
+
+================================================================================
+ Wifi settings > to make MPU connect with my network name having my network Password
+================================================================================
+wpa_passphrase <my network Name>  <my network Password> >> /etc/wpa_supplicant.conf
+
+
+Name	Physical base address	Virtual base address
+USART1	5c000000	FE000000
+USART2	4000e000	FE00e000
+USART3	4000f000	FE00f000
+UART4	40010000	FE010000
+UART5	40011000	FE011000
+USART6	44003000	FE003000
+UART7	40018000	FE018000
+UART8	40019000	FE019000
+
+
+Domain	Peripheral	Runtime allocation	Comment
+	Instance	Cortex-A7
+			secure
+	(OP-TEE)	Cortex-A7
+			non-secure
+	(Linux)	Cortex-M4
+			(STM32Cube)
+Low speed interface	USART1	☐	☐		Assignment (single choice)
+USART
+			USART2		☐	☐	Assignment (single choice)
+			USART3		☐	☐	Assignment (single choice)
+			UART4		☐	☐	Assignment (single choice).Used for Linux® serial console on ST boards.
+			UART5		☐	☐	Assignment (single choice)
+			USART6		☐	☐	Assignment (single choice)
+			UART7		☐	☐	Assignment (single choice)
+			UART8		☐	☐	Assignment (single choice)
+			
+			
+
+rivers/iio/imu/st_ism330dhcx/st_ism330dhcx_buffer.c:918:16: error: 'iio_triggered_buffer_postenable' undeclared here (not in a function); did you mean 'iio_triggered_buffer_cleanup'?
+  918 |  .postenable = iio_triggered_buffer_postenable,
+      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                iio_triggered_buffer_cleanup
+drivers/iio/imu/st_ism330dhcx/st_ism330dhcx_buffer.c:919:16: error: 'iio_triggered_buffer_predisable' undeclared here (not in a function); did you mean 'iio_triggered_buffer_cleanup'?
+  919 |  .predisable = iio_triggered_buffer_predisable,
+      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                iio_triggered_buffer_cleanup
+make[4]: *** [scripts/Makefile.build:279: drivers/iio/imu/st_ism330dhcx/st_ism330dhcx_buffer.o] Error 1
+make[3]: *** [scripts/Makefile.build:496: drivers/iio/imu/st_ism330dhcx] Error 2
+make[2]: *** [scripts/Makefile.build:496: drivers/iio/imu] Error 2
+make[1]: *** [scripts/Makefile.build:496: drivers/iio] Error 2
+make: *** [Makefile:1805: drivers] Error 2
+saurabh@saurabh:~/STM32MPU_workspace/STM32MP15-Ecosystem-v3.0.0/Developer-Packag
+
+/home/saurabh/STM32CubeIDE/workspace_https://wiki.st.com/stm32mpu/wiki/PC_prerequisites1.6.0
+
+cd /opt/st/stm32cubeide_1.6.0_4/
+
+
+
+
+
+  
+oot@stm32mp1:~# dmesg | grep version
+[    0.000000] Linux version 5.10.10 (oe-user@oe-host) (arm-ostl-linux-gnueabi-gcc (GCC) 9.3.0, GNU ld (GNU Binutils) 2.34.0.20200220) #1 SMP PREEMPT Sat Jan 23 15:04:06 UTC 2021
+[    0.143150] libata version 3.00 loaded.
+[    0.145164] arm-scmi firmware:scmi0: SCMI Protocol v2.0 'ST:' Firmware version 0x0
+[    1.991891] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    1.994216] jffs2: version 2.2. (NAND) \xc2\xa9 2001-2006 Red Hat, Inc.
+[    1.995172] fuse: init (API version 7.32)
+[    1.996429] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 246)
+[    2.082306] registered taskstats version 1
+[   95.320722] systemd[1]: Hardware watchdog 'STM32 Independent Watchdog', version 0
+[  102.818287] Galcore version 6.4.3.279124
+[  103.869503] brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM43430/1 wl0: Feb 16 2020 22:39:24 version 7.45.98.97 (r724416 CY) FWID 01-bf41ed64
+root@stm32mp1:~# 
+CTRL-A Z for help | 115200 8N1 | NOR | Minicom 2.7.1 | VT102 | Offline | ttyACM0                                                                                                                          
+
+/home/saurabh/STM32MPU_workspace/STM32MP15-Ecosystem-v3.0.0/Developer-Package/SDK/environment-setup-cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi
+
+	grep -i -r "usart3" --include \*.dts *
+	
+	
+	
+https://wiki.st.com/stm32mpu/wiki/STM32MP15_ROM_code_overview	
+	USART3
+IO name	Pin id (AF mux)
+USART3_RX	PB12 (AF08)
+USART3_TX	PB10 (AF07)
+	
+	
+	USART2
+IO name	Pin id (AF mux)
+USART2_RX	PA3 (AF07)
+USART2_TX	PA2 (AF07)
+
+
+
+ifconfig wlan0  192.168.43.135  broadcast 192.168.43.255  netmask 255.255.255.0
+
+################################################
+WiFi Settings
+################################################
+
+wpa_passphrase Pixel modern12345 >> /etc/wpa_supplicant.conf
+wpa_passphrase iPhone modern12345 >> /etc/wpa_supplicant.conf
+
+wpa_passphrase SRALink D!rect1234. >> /etc/wpa_supplicant.conf
+
+wpa_supplicant -B -iwlan0 -c /etc/wpa_supplicant.conf
+dhclient wlan0
+
+wpa_passphrase Rawats Bhagiratha@lyf7 >> /etc/wpa_supplicant.conf
+wpa_passphrase Pixel modern12345 >> /etc/wpa_supplicant.conf
+
+
+################################################
+Downloading and Building the Distribution Package
+################################################
+
+
+#installing repo
+
+mkdir ~/bin
+PATH=~/bin:$PATH
+
+#Download the Repo Launcher and ensure that it's executable:
+
+curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+chmod a+x ~/bin/repo
+
+
+mkdir openstlinux-5.10-dunfell-mp1-21-03-31 
+cd openstlinux-5.10-dunfell-mp1-21-03-31
+
+~/bin/repo init -u https://github.com/STMicroelectronics/oe-manifest.git -b refs/tags/openstlinux-5.10-dunfell-mp1-21-03-31
+~/bin/repo sync
+DISTRO=openstlinux-weston MACHINE=stm32mp1 source layers/meta-st/scripts/envsetup.sh
+
+
+bitbake st-image-weston
+
+
+systemctl stop weston@root
+export QT_QPA_PLATFORM=eglfs
+export QML2_IMPORT_PATH='/usr/lib/qt5/qml/'
+export QT_QPA_EGLFS_ALWAYS_SET_MODE='1'
+export QT_QPA_EGLFS_KMS_CONFIG='/home/root/eglfs_config.json'
+
+qt-wpe-simple-browser http://google.com
+python3 web_browser.py  http://google.com
+
+
+
+
+DISTRO=openstlinux-weston MACHINE=stm32mp1 source layers/meta-st/scripts/envsetup.sh
+
+bitbake st-image-weston
+
+
+/home/saurabh/STM32MPU_workspace/STM32MP15-Ecosystem-v3.0.0/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1
+
+gpioset gpiochip3 1=0
+gpioset gpiochip3 1=1
+
+
+nameserver 172.20.10.1
+u1.amazonaws.com
+ 
+ 
+ systemctl restart systemd-resolved.service
+ 
+ nameserver 127.0.0.53
+https://wiki.st.com/stm32mpu/wiki/How_to_setup_wifi_connection
+
+
+wget --spider --quiet http://google.com
+if [ "$?" != 0 ]; then
+  echo "Website failed!" | mail -s "Website down" your_email@provider.tld
+fi
+
+
+to check the current wifi network 
+iw wlan0 link
+
+
+wpa_passphrase Rawats Bhagiratha@lyf7 >> /etc/wpa_supplicant.conf
+wpa_passphrase Pixel modern12345 >> /etc/wpa_supplicant.conf
+wpa_supplicant -B -iwlan0 -c /etc/wpa_supplicant.conf
+dhclient wlan0
+
+
+API Endpoint = https://jim3rgi6d3.execute-api.eu-central-1.amazonaws.com/v1/telemetry
+API Key = 8d54837c-5793-4adb-ad4c-efa11e5bfee1.c0e77783-3dd8-40a6-b4e0-2fead68eb033
+API Device_ID = 201303
+GNSS DATA
+{"device_id": 201303,"values" :[{"ts": 3414623408,"t": "gnss","v": {"lon": 77.351097,"lat": 28.551399,"ele": 3.500000}}]}
+Return value: 121in function {"device_id": 201303,"values" :[{"ts": 3414623408,"t": "gnss","v": {"lon": 77.351097,"lat": 28.551399,"ele": 3.500000}}]}
+Received  value: {"device_id": 201303,"values" :[{"ts": 3414623408,"t": "gnss","v": {"lon": 77.351097,"lat": 28.551399,"ele": 3.500000}}]} 
+
+root@stm32mp1:~# wpa_supplicant -B -iwlan0 -c /etc/wpa_supplicant.conf
+Successfully initialized wpa_supplicant
+root@stm32mp1:~# ifconfig[  132.396267] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+root@stm32mp1:~#  dhclient wlan0
+root@stm32mp1:~# gpioset gpiochip3 1=0
+root@stm32mp1:~# gpioset gpiochip3 1=1
+
+
+Bit Bake
+=======================================
+DISTRO=openstlinux-weston MACHINE=stm32mp1 source layers/meta-st/scripts/envsetup.sh
+ST_ARCHIVER_ENABLE = "1"
+
+bitbake-layers add-layer meta-x-linux-nfc5
+bitbake-layers show-layers	
+
+
+ssh pi@192.168.43.215
+
+sudo apt-get install gpiod
+sudo apt-get install libgpiod-dev
+
+
+gcc -lgpiod test.c
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi/myrecipe/1.0-r0/myrecipe-1.0/rfal/st25r3911
+
+saurabh@saurabh:~/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31$ devtool build myrecipe
+saurabh@saurabh:~/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31$ devtool edit myrecipe
+
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi/myrecipe/1.0-r0/myrecipe-1.0/rfal/st25r3911
+
+saurabh@saurabh:~/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31$ devtool edit-recipe myrecipe  > to edit cmake 
+
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/workspace/recipes/newrecipe/newrecipe.bb
+
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi/newrecipe/
+
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi/newrecipe/1.0-r0/newrecipe-1.0/nfc_poller
+
+
+devtool add r1 NFC5
+INFO: Recipe /home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/workspace/recipes/r1/r1.bb has been automatically created; further editing may be required to make it fully functional
+
+devtool edit-recipe r1
+devtool build r1
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi/r1/1.0-r0/r1-1.0/nfc_poller
+
+
+=====
+Logs > tmp-glibc/log/cooker/arch/console-latest.log.
+gedit tmp-glibc/log/cooker/stm32mp1/console-latest.log 
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/workspace/recipes/gnss
+
+xdg-open .
+
+
+###Path to build app using devtool
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/work/cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi/gps1/1.0-r0/gps1-1.0
+
+
+KERNEL_DEVICETREE =
+> "${S}/git/arch/arm/boot/dts/myownbsp_mx28.dts"
+
+Use ${WORKDIR}/myownbsp_mx28.dts, it should work.
+
+
+
+$ recipetool appendsrcfile -wm your-stm32mp1 /home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/layers/meta-st/meta-x-linux-gnss virtual/kernel //home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/gnss_x_linux/stm32mp157c-dk2.dts 'arch/${ARCH}/boot/dts/your.dts'
+
+stm32mp1
+
+
+recipetool appendsrcfile -wm stm32mp1 /home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/layers/meta-st/meta-x-linux-gnss virtual/kernel /home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/gnss_x_linux/stm32mp157c-dk2.dts 'arch/${ARCH}/boot/dts/stm32mp157c-dk2.dts'
+
+
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/layers/meta-st/meta-x-linux-gnss
+
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/work/stm32mp1-ostl-linux-gnueabi/linux-stm32mp/5.10.10-r0/linux-5.10.10/arch/arm/boot/dts
+
+
+SRC_URI += "file://stm32mp157c-dk2.dts;subdir=linux-5.10.10/arch/${ARCH}/boot/dts"
+
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
+
+=====
+recipe
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/layers/meta-st/meta-x-linux-gnss 
+======
+
+======
+file location : kernel recipe
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/layers/meta-st/meta-x-linux-gnss/recipes-kernel/linux/linux-stm32mp/stm32mp1
+======
+
+=========
+images 
+=======
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/deploy/images/stm32mp1
+https://wiki.st.com/stm32mpu/wiki/STM32MP15_Discovery_kits_-_Starter_Package#Image_flashing
+
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/deploy/images/stm32mp1/flashlayout_st-image-weston/trusted
+==========
+
+========
+linux kernel location 
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/work/stm32mp1-ostl-linux-gnueabi/linux-stm32mp/5.10.10-r0/linux-5.10.10
+==============
+STM32_Programmer_CLI --h
+    STM32_Programmer_CLI -l usb
+STM32_Programmer_CLI -c port=usb1 -w flashlayout_st-image-weston/trusted/FlashLayout_sdcard_stm32mp157f-dk2-trusted.tsv
+
+
+STM32_Programmer_CLI -c port=usb1 -w /home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/deploy/images/stm32mp1/flashlayout_st-image-weston/trusted/FlashLayout_sdcard_stm32mp157c-dk2-trusted.tsv
+
+=========
+kernel recipe folder
+/home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/layers/meta-st/meta-x-linux-gnss/recipes-kernel/linux
+==========
+
+patch  location : /home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/layers/meta-st/meta-x-linux-gnss/recipes-kernel/linux/linux-stm32mp/stm32mp1
+
+
+================================================================================
+
+device tree embedding in the recipe
+
+============================================================================
+
+
+(1) go the dts  directory of the kernel we are using 
+
+
+Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/build-openstlinuxweston-stm32mp1/tmp-glibc/work/stm32mp1-ostl-linux-gnueabi/linux-stm32mp/5.10.10-r0/linux-5.10.10/arch/arm/boot/dts
+
+
+(2) modify the dts and create a patch file 
+
+keep a copy of the existing dts file (better to put in some folder - say test)
+modify stm32mp157c-dk2.dts
+
+<do your changes> - Keep the formatting consistent with the existing dts
+
+#create a patch
+diff test/stm32mp157c-dk2.dts  stm32mp157c-dk2.dts > update.patch
+
+(3) copy the .patch file to kernel recipe folder
+
+>cp update.patch  Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/layers/meta-st/meta-x-linux-gnss/recipes-kernel/linux/linux-stm32mp/stm32mp1
+( this is my layer location)
+ #/home/saurabh/STM32MPU_workspace/gnss/recipe/new-bb/layers/meta-st/meta-x-linux-gnss
+
+(4) put the path of this patch in the bb append
+
+linux-stm32mp_%.bbappend inside  /home/saurabh/STM32MPU_workspace/gnss/recipe/Distribution-Package/openstlinux-5.10-dunfell-mp1-21-03-31/layers/meta-st/meta-x-linux-gnss/recipes-kernel/linux
+
+add the SRC_URI to this patch
+
+SRC_URI_append = " file://gnss.patch"
+
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
+PACKAGE_ARCH = "${MACHINE_ARCH}"
+
+
+(5) build the st image
+
+bitbake st-image-weston
+
+(6) Flash the st weston image
+
+https://wiki.st.com/stm32mpu/wiki/STM32MP15_Discovery_kits_-_Starter_Package#Image_flashing
+
+cd /home/saurabh/STM32MPU_workspace/gnss/recipe/new-bb/build-openstlinuxweston-stm32mp1/tmp-glibc/deploy/images/stm32mp1
+
+
+As a test I have added a patch generated for GNSS project.
+Test : 
+without modification do ls -l /dev/ttySTM32 ( no such file will be present)
+
+After this build and flash 
+ls -l /dev/ttySTM32 will appear 
+This patch basically  enables this /dev/ttySTM32
+
+
+Thanks and regards,
+Saurabh
+
+
+
+ 1993 cd /home/saurabh/STM32MPU_workspace/gnss/recipe/new-bb/build-openstlinuxweston-stm32mp1/tmp-glibc/deploy/images/stm32mp1
+ 1994  cd /home/saurabh/STM32MPU_workspace/gnss/recipe/new-bb/build-openstlinuxweston-stm32mp1/tmp-glibc/deploy/images/stm32mp1
+ 1995  ls
+ 1996  STM32_Programmer_CLI -l usb
+ 1997  STM32_Programmer_CLI -c port=usb1 -w flashlayout_st-image-weston/trusted/FlashLayout_sdcard_stm32mp157f-dk2-trusted.tsv
+ 
+ /home/saurabh/STM32MPU_workspace/Distribution-Package/build-openstlinuxweston-stm32mp1
+ 
+ cs-gpios = <&gpioe 11 0>;
+ 
+ iio_generic_buffer -n iis2mdc_mag -ga -c 1000
+
+ iio_generic_buffer -n iis2mdc_mag -ga -c -1
+ 
+ ###############################dump trace ###############################
+ [   51.690744] CPU: 0 PID: 792 Comm: demo_launcher.p Tainted: G            E     5.10.10 #1
+[   51.698826] Hardware name: STM32 (Device Tree Support)
+[   51.703997] [<c0110824>] (unwind_backtrace) from [<c010c4e0>] (show_stack+0x10/0x14)
+[   51.711730] [<c010c4e0>] (show_stack) from [<c0b8319c>] (dump_stack+0xb8/0xcc)
+[   51.718961] [<c0b8319c>] (dump_stack) from [<c0b7f014>] (__report_bad_irq+0x3c/0xc0)
+[   51.726709] [<c0b7f014>] (__report_bad_irq) from [<c0181eb4>] (note_interrupt+0x25c/0x2a8)
+[   51.734982] [<c0181eb4>] (note_interrupt) from [<c017e5c0>] (handle_irq_event_percpu+0x84/0x8c)
+[   51.743687] [<c017e5c0>] (handle_irq_event_percpu) from [<c017e600>] (handle_irq_event+0x38/0x5c)
+[   51.752571] [<c017e600>] (handle_irq_event) from [<c0183064>] (handle_fasteoi_irq+0xcc/0x17c)
+[   51.761107] [<c0183064>] (handle_fasteoi_irq) from [<c017d514>] (generic_handle_irq+0x34/0x44)
+[   51.769728] [<c017d514>] (generic_handle_irq) from [<c017db0c>] (__handle_domain_irq+0x7c/0xe8)
+[   51.778440] [<c017db0c>] (__handle_domain_irq) from [<c0601d90>] (gic_handle_irq+0x80/0x94)
+[   51.786802] [<c0601d90>] (gic_handle_irq) from [<c0100ed0>] (__irq_usr+0x50/0x80)
+[   51.794284] Exception stack(0xc69b7fb0 to 0xc69b7ff8)
+[   51.799339] 7fa0:                                     00000010 41714c34 415a8f41 b3d91000
+[   51.807528] 7fc0: 00000001 41709000 41709000 00000001 417277e0 b6daafbc 000b984e b6daae28
+[   51.815714] 7fe0: 4170982c bed57640 415a8f53 415a8bca 20000030 ffffffff
+[   51.822330] handlers:
+[   51.824611] [<4275d61f>] st_mag40_trigger_irq_handler [st_mag40] threaded [<07486c0b>] st_mag40_trigger_thread_handler [st_mag40]
+[   51.836266] Disabling IRQ #90
+root@stm32mp1:/# 
+
+
+########################################################################################3
+
+ iis2mdc_magn@1e {
+            compatible = "st,iis2mdc_magn";
+            reg = <0x1e>;
+            interrupt-parent = <&gpioa>;
+            interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
+           // interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
+           // interrupts = <5 IRQ_TYPE_EDGE_RISING>;
+           // interrupts = <5 IRQ_TYPE_LEVEL_LOW>;
+        };
+
+
+================================================================================
+Docker building :
+
+============================================================================
+ 
+https://github.com/dh-electronics/dhcom_stm32mp1-bsp-platform
+
+
+
+
+dh-stm32mp1-dhcor-avenger96
+ MACHINE=dh-stm32mp1-dhcom-common-pdk2 DISTRO=dhlinux source ./setup-environment build
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: empty ident name (for <saurabhr1@_HOSTNAME_>) not allowed
+
+saurabhr1@vmi648265:~/sr$  git config --global user.email imsaurabhrawat@gmail.c                                                                                        om
+saurabhr1@vmi648265:~/sr$   git config --global user.name saurabh
+saurabhr1@vmi648265:~/sr$ ~/bin/repo init -u https://github.com/dh-electronics/d                                                                                        hcom_stm32mp1-bsp-platform -b dunfell
+
+Your identity is: saurabh <imsaurabhrawat@gmail.com>
+If you want to change this, please re-run 'repo init' with --config-name
+
+Testing colorized output (for 'repo diff', 'repo status'):
+  black    red      green    yellow   blue     magenta   cyan     white
+  bold     dim      ul       reverse
+Enable color display in this user account (y/N)?
+
+repo has been initialized in /home/saurabhr1/sr
+saurabhr1@vmi648265:~/sr$ ~/bin/repo sync
+Fetching: 100% (10/10), done in 1m3.890s
+Garbage collecting: 100% (10/10), done in 0.031s
+Checking out: 100% (10/10), done in 1.730s
+repo sync has finished successfully.
+saurabhr1@vmi648265:~/sr$  MACHINE=dh-stm32mp1-dhcor-avenger96 DISTRO=dhlinux so                                                                                        urce ./setup-environment build
+The Yocto Project has extensive documentation about OE including a
+reference manual which can be found at:
+    http://yoctoproject.org/documentation
+
+For more information about OpenEmbedded see their website:
+    http://www.openembedded.org/
+
+You can now run 'bitbake <target>'
+
+Common targets are:
+    core-image-minimal
+    meta-toolchain
+    meta-toolchain-sdk
+    adt-installer
+    meta-ide-support
+
+Your build environment has been configured with:
+
+    MACHINE=dh-stm32mp1-dhcor-avenger96
+    SDKMACHINE=i686
+    DISTRO=dhlinux
+saurabhr1@vmi648265:~/sr/build$
+
+
+
+
+    MACHINE=dh-stm32mp1-dhcor-avenger96
+    SDKMACHINE=i686
+    DISTRO=dhlinux
+saurabhr1@vmi648265:~/sr/build$ bitbake dh-image-demo
+WARNING: Host distribution "ubuntu-20.04" has not been validated with this version of the build system; you may possibly experience unexpected failures. It is recommended that you use a tested distribution.
+
+
+
+#Distribution package 
+
+https://wiki.st.com/stm32mpu/wiki/PC_prerequisites
+
+Required for Distribution Package.
+In addition to http/https protocols (used in 90% of the Internet traffic), other protocols such as git:// or ssh:// might be required.
+
+For example, in the context of the Distribution Package, some "git fetch" commands might require "git:// protocols".
+To support these protocols through a proxy, directly setup the proxy in the $HOME/.gitconfig file (core.gitproxy) and use a tool such as cockscrew[2] to tunnel the git:// flow into the http flow:
+
+PC $> sudo apt-get update
+PC $> sudo apt-get install corkscrew
+
+PC $> git config --replace-all --global core.gitproxy "$HOME/bin/git-proxy.sh"
+PC $> git config --add --global core.gitproxy "none for <MyPrivateNetworkDomain>" (optional, for example .st.com or localhost)
+PC $> echo 'exec corkscrew <MyProxyServerUrl> <MyProxyPort> $* $HOME/.git-proxy.auth' > $HOME/bin/git-proxy.sh
+PC $> chmod 700 $HOME/bin/git-proxy.sh
+PC $> echo '<MyProxyLogin>:<MyProxyPassword>' > $HOME/.git-proxy.auth
+PC $> chmod 600 $HOME/.git-proxy.auth
+
+Use the command below to test the proxy settings:
+
+PC $> git ls-remote git://git.openembedded.org/openembedded-core > /dev/null && echo OK || echo KO
+
+The command returns 'OK' if the proxy settings are correct.
+3.2 Installing extra packages↑
+
+Required for Developer Package and Distribution Package.
+
+Additional Ubuntu packages must be installed to perform basic development tasks, basic cross-compilation (via Developer Package) or more complex cross-compilation such as OpenEmbedded does (via Distribution Package):
+
+    Packages required by OpenEmbedded/Yocto (details here):
+
+PC $> sudo apt-get update
+PC $> sudo apt-get install gawk wget git-core diffstat unzip texinfo gcc-multilib build-essential chrpath socat cpio python3 python3-pip python3-pexpect xz-utils debianutils iputils-ping python3-git python3-jinja2 libegl1-mesa libsdl1.2-dev pylint3 pylint xterm
+PC $> sudo apt-get install make xsltproc docbook-utils fop dblatex xmlto
+PC $> sudo apt-get install libmpc-dev libgmp-dev
+
+    Packages needed for some "Developer Package" use cases:
+
+PC $> sudo apt-get install libncurses5 libncurses5-dev libncursesw5-dev libssl-dev linux-headers-generic u-boot-tools device-tree-compiler bison flex g++ libyaml-dev libmpc-dev libgmp-dev
+
+    Package for repo (used to download the "Distribution Package" source code):
+
+Please follow the installation instructions described in repo.
+
+ For Ubuntu 20.04, first sets python3 as default: PC $> sudo apt install python-is-python3
+ For Ubuntu 16.04, use the legacy repo old-repo-python2 chapter
+
+    Useful tools:
+
+PC $> sudo apt-get install coreutils bsdmainutils sed curl bc lrzsz corkscrew cvs subversion mercurial nfs-common nfs-kernel-server libarchive-zip-perl dos2unix texi2html diffstat libxml2-utils
+
+
+
+################################################
+Remote Desktop
+################################################
+
+   64  cd stm32mpu/
+   65  ls
+   66  scp uImage root@192.168.72.1:/boot
+   67  scp dtb/stm32mp157*.dtb root@192.168.72.1:/boot
+   74  scp -r modules/5.10.10/ root@192.168.72.1:/lib/modules
+   75  history
+
+
+
+		
