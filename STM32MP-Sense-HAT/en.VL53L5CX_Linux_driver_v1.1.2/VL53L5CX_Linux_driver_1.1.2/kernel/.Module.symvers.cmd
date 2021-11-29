@@ -1,0 +1,1 @@
+cmd_/home/mpu/sr/en.VL53L5CX_Linux_driver_v1.1.2/VL53L5CX_Linux_driver_1.1.2/kernel/Module.symvers := sed 's/ko$$/o/' /home/mpu/sr/en.VL53L5CX_Linux_driver_v1.1.2/VL53L5CX_Linux_driver_1.1.2/kernel/modules.order | scripts/mod/modpost -m  -E  -o /home/mpu/sr/en.VL53L5CX_Linux_driver_v1.1.2/VL53L5CX_Linux_driver_1.1.2/kernel/Module.symvers -e -i Module.symvers   -T -
