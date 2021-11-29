@@ -3,6 +3,21 @@ Quick Commands
 ================================================================================
 #Search a given text in  sub folders 
  grep -lrnw '.' -e '0x53'
+  grep -lrnw '.' -e '0x29'
+
+ grep -lrnw '.' -e 'i2c_client'
+ 
+   grep -lrnw '.' -e 'not detected'
+ 
+ 
+ 
+ 
+ ssh-keygen -R raspberrypi.local
+ssh pi@raspberrypi.local
+https://desertbot.io/blog/headless-raspberry-pi-4-ssh-wifi-setup-cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi
+
+use this to login : ssh pi@raspberrypi.local
+
 
 
 ================================================================================
@@ -117,6 +132,8 @@ grep -rnw imu/ -e 'ism330dhcx'
 
 scp -r install_artifact/lib/modules/* root@192.168.72.1:/lib/modules
 
+scp stmvl53l5cx.ko  root@192.168.72.1:/home/root/tof
+scp menu  root@192.168.72.1:/home/root/tof
 
 
 
@@ -248,7 +265,7 @@ ifconfig wlan0  192.168.43.135  broadcast 192.168.43.255  netmask 255.255.255.0
 WiFi Settings
 ################################################
 
-wpa_passphrase Pixel modern12345 >> /etc/wpa_supplicant.conf
+wpa_passphrase Honor modern12345 >> /etc/wpa_supplicant.conf
 wpa_passphrase iPhone modern12345 >> /etc/wpa_supplicant.conf
 
 wpa_passphrase SRALink D!rect1234. >> /etc/wpa_supplicant.conf
