@@ -885,6 +885,109 @@ static int gpiolib()
   }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+a=0
+s="ism330dhcx_accel"
+echo "Starting ISM330DHCX Accelerometer Sensor Test"
+while [ $a -lt 10 ]
+do
+        if [ "$s" == "$(cat /sys/bus/iio/devices/iio\:device$a/name)" ] ;then
+                echo "$(cat /sys/bus/iio/devices/iio\:device$a/name)"
+                echo "Accel_X = $(cat /sys/bus/iio/devices/iio\:device$a/in_accel_x_raw)"
+                echo "Accel_Y = $(cat /sys/bus/iio/devices/iio\:device$a/in_accel_y_raw)"
+                echo "Accel_Z = $(cat /sys/bus/iio/devices/iio\:device$a/in_accel_z_raw)"
+                break
+        else
+                a=`expr $a + 1`
+        fi
+done
+
+a =0
+s="ism330dhcx_gyro"
+echo "Starting ISM330DHCX Gyroscope Sensor Test"
+while [ $a -lt 10 ]
+do
+        if [ "$s" == "$(cat /sys/bus/iio/devices/iio\:device$a/name)" ] ;then
+                echo "$(cat /sys/bus/iio/devices/iio\:device$a/name)"
+                echo "GYRO_X = $(cat /sys/bus/iio/devices/iio\:device$a/in_anglvel_x_raw)"
+                echo "GYRO_Y = $(cat /sys/bus/iio/devices/iio\:device$a/in_anglvel_y_raw)"
+                echo "GYRO_Z = $(cat /sys/bus/iio/devices/iio\:device$a/in_anglvel_z_raw)"
+                break
+        else
+                a=`expr $a + 1`
+        fi
+done
+
+a=0
+s="lsm303ah_magn"
+echo "Starting LSM303 Magnetomter Test"
+while [ $a -lt 10 ]
+do
+        if [ "$s" == "$(cat /sys/bus/iio/devices/iio\:device$a/name)" ] ;then
+                echo "$(cat /sys/bus/iio/devices/iio\:device$a/name)"
+                echo "MAG_X = $(cat /sys/bus/iio/devices/iio\:device$a/in_magn_x_raw)"
+                echo "MAG_Y = $(cat /sys/bus/iio/devices/iio\:device$a/in_magn_y_raw)"
+                echo "MAG_Z = $(cat /sys/bus/iio/devices/iio\:device$a/in_magn_z_raw)"
+                break
+        else
+                a=`expr $a + 1`
+        fi
+done
+
+
+a=0
+s="lps22hh"
+echo "Starting LPS22H Pressure Sensor Test"
+while [ $a -lt 10 ]
+do
+        if [ "$s" == "$(cat /sys/bus/iio/devices/iio\:device$a/name)" ] ;then
+                echo "$(cat /sys/bus/iio/devices/iio\:device$a/name)"
+                echo "Pressure_Raw = $(cat /sys/bus/iio/devices/iio\:device$a/in_pressure_raw )"
+                break
+        else
+                a=`expr $a + 1`
+        fi
+done
+
+
+a=0
+s="stts22h"
+echo "Starting STTS22H Temperature Sensor Test"
+while [ $a -lt 10 ]
+do
+        if [ "$s" == "$(cat /sys/bus/iio/devices/iio\:device$a/name)" ] ;then
+                echo "$(cat /sys/bus/iio/devices/iio\:device$a/name)"
+                echo "Temperature = $(cat /sys/bus/iio/devices/iio\:device$a/in_temp_ambient_raw)"
+                break
+        else
+                a=`expr $a + 1`
+        fi
+done
+
+
+
+a=0
+s="lis2dw12_accel"
+echo "Starting IIS2DLPC Acclerometer Sensor Test"
+while [ $a -lt 10 ]
+do
+        if [ "$s" == "$(cat /sys/bus/iio/devices/iio\:device$a/name)" ] ;then
+                echo "$(cat /sys/bus/iio/devices/iio\:device$a/name)"
+                echo "Accel_X = $(cat /sys/bus/iio/devices/iio\:device$a/in_accel_x_raw)"
+                echo "Accel_Y = $(cat /sys/bus/iio/devices/iio\:device$a/in_accel_y_raw)"
+                echo "Accel_Z = $(cat /sys/bus/iio/devices/iio\:device$a/in_accel_z_raw)"
+                break
+        else
+                a=`expr $a + 1`
+        fi
+done
+
+
+echo "Starting Rainbow Sensor Test"
+./vd6283
+echo "Starting Time of FLight Test"
+./menu29
+~
+~
 
 ######################################################################################################
 		
