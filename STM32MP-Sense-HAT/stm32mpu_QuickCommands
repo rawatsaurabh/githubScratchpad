@@ -129,6 +129,10 @@ make ARCH=arm INSTALL_MOD_PATH="$PWD/install_artifact" modules_install
 scp arch/arm/boot/uImage root@192.168.72.1:/boot
 scp arch/arm/boot/dts/stm32mp157*.dtb root@192.168.72.1:/boot
 
+
+scp arch/arm/boot/uImage root@192.168.43.135:/boot
+scp arch/arm/boot/dts/stm32mp157*.dtb root@192.168.43.135:/boot
+
 For ecosystem release  v2.1.0 ￼ :
 rm install_artifact/lib/modules/5.4.56/build install_artifact/lib/modules/5.4.56/source 
 
